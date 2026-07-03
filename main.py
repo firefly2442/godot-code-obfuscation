@@ -44,8 +44,16 @@ def parse_args():
 class Symbol:
     name: str
     token: Token
-    kind: str
+    kind: str # local, parameter, member, function...
+    scope: "Scope"
+
     new_name: str | None = None
+
+    references: list[Token] = None
+
+    def __post_init__(self):
+        if self.references is None:
+            self.references = []
 
 class Scope:
     def __init__(self, parent=None):
@@ -70,6 +78,12 @@ class Visitor:
         if isinstance(node, Tree):
             method = getattr(self, f"visit_{node.data}", self.generic_visit)
             return method(node)
+
+        elif isinstance(node, Token):
+            return self.visit_token(node)
+
+    def visit_token(self, token):
+        pass
 
     def generic_visit(self, node):
         for child in node.children:
@@ -109,6 +123,22 @@ class Renamer(Visitor):
         self.generic_visit(node)
         self.scope = old_scope
 
+    def visit_token(self, token):
+        if token.type != "NAME":
+            return
+
+        symbol = self.scope.lookup(token.value)
+
+        if symbol:
+            self.edits.append(
+                (
+                    token.start_pos,
+                    token.end_pos,
+                    symbol.new_name,
+                )
+            )
+
+
     def visit_func_var_typed_assgnd(self, node):
         name_token = node.children[0]
 
@@ -118,7 +148,7 @@ class Renamer(Visitor):
 
             if isinstance(name_token, Token) and name_token.type == "NAME":
                 self.edits.append(
-                    (name_token.start_pos, name_token.end_pos, generate_name())
+                    (name_token.start_pos, name_token.end_pos, symbol.new_name)
                 )
 
 class SymbolCollector(Visitor):
@@ -142,7 +172,8 @@ class SymbolCollector(Visitor):
         self.scope.define(Symbol(
             name=name,
             token=node.children[0],
-            kind="param"
+            kind="param",
+            scope=self.scope,
         ))
 
     def visit_func_var_typed_assgnd(self, node):
@@ -154,7 +185,8 @@ class SymbolCollector(Visitor):
             self.scope.define(Symbol(
                 name=name,
                 token=child,
-                kind="local"
+                kind="local",
+                scope=self.scope,
             ))
 
 
@@ -262,6 +294,8 @@ def main():
             tree = parser.parse(content, gather_metadata=True)
             debug = DebugVisitor()
             debug.visit(tree)
+
+            dump(tree)
 
             collector = SymbolCollector()
             collector.visit(tree)
