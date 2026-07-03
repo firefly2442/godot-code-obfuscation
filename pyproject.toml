@@ -1,0 +1,9 @@
+[project]
+name = "godot-code-obfuscation"
+version = "0.1.0"
+description = "Obfuscate Godot gdscript code."
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = [
+    "gdtoolkit>=4.5.0",
+]
