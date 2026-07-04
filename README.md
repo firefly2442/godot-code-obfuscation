@@ -1,5 +1,7 @@
 # godot-code-obfuscation
 
+A Python script for obfuscating Godot gdscript code.
+
 ## Requirements
 
 * Python
@@ -11,6 +13,8 @@ uv sync
 ```
 
 ## Usage
+
+Note that the sript overwrites existing files, be careful!
 
 ```shell
 uv run main.py
