@@ -54,8 +54,8 @@ def main():
             content = BlankLineStripper(content).strip()
 
             tree = parser.parse(content, gather_metadata=True)
-            debug = DebugVisitor()
-            debug.visit(tree)
+            # debug = DebugVisitor()
+            # debug.visit(tree)
 
             # dump(tree)
 
