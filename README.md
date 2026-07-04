@@ -16,6 +16,14 @@ uv sync
 uv run main.py
 ```
 
+## Developers
+
+Update `uv.lock` dependencies
+
+```shell
+uv lock --upgrade
+```
+
 ## References
 
 * Supporting Libraries and Links

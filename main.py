@@ -20,12 +20,6 @@ def parse_args():
         help="Path to a .gd file or a directory containing GDScript files."
     )
     parser.add_argument(
-        "-l", "--name-length",
-        type=int,
-        default=12,
-        help="Length of generated obfuscated identifier names (default: 12)."
-    )
-    parser.add_argument(
         "-e", "--exclude",
         nargs="+",
         default=[],
@@ -63,6 +57,8 @@ class Scope:
     def define(self, symbol):
         symbol.new_name = generate_name()
         self.symbols[symbol.name] = symbol
+        
+        # print(f"DEFINE {symbol.kind}: {symbol.name} -> {symbol.new_name}")
 
     def lookup(self, name):
         scope = self
@@ -113,8 +109,9 @@ class DebugVisitor(Visitor):
         super().generic_visit(node)
 
 class Renamer(Visitor):
-    def __init__(self, global_scope):
+    def __init__(self, global_scope, source):
         self.scope = global_scope
+        self.source = source
         self.edits = []
 
     def visit_func_def(self, node):
@@ -125,6 +122,10 @@ class Renamer(Visitor):
 
     def visit_token(self, token):
         if token.type != "NAME":
+            return
+
+        # Don't rename properties after '.'
+        if token.start_pos > 0 and self.source[token.start_pos - 1] == ".":
             return
 
         symbol = self.scope.lookup(token.value)
@@ -138,18 +139,6 @@ class Renamer(Visitor):
                 )
             )
 
-
-    def visit_func_var_typed_assgnd(self, node):
-        name_token = node.children[0]
-
-        symbol = self.scope.lookup(name_token.value)
-        if symbol:
-            meta = node.meta
-
-            if isinstance(name_token, Token) and name_token.type == "NAME":
-                self.edits.append(
-                    (name_token.start_pos, name_token.end_pos, symbol.new_name)
-                )
 
 class SymbolCollector(Visitor):
     def __init__(self):
@@ -196,10 +185,10 @@ def get_name_token(node):
             return child
     return None
 
-def generate_name(n=12):
+def generate_name(n=18):
     return ''.join(random.choice(string.ascii_letters) for _ in range(n))
 
-def build_rename_map(names, length=12):
+def build_rename_map(names, length=18):
     return {name: generate_name(length) for name in names}
 
 def collect_local_variables(tree):
@@ -276,7 +265,6 @@ def main():
     args = parse_args()
 
     input_path = Path(args.input_path)
-    name_length = args.name_length
     excluded_files = set(args.exclude)
 
     for file_path in input_path.rglob("*.gd"):
@@ -285,27 +273,27 @@ def main():
                 print(f"Skipping excluded file: {file_path.name}")
                 continue
 
-            if file_path.name != "custom_tree_tooltip.gd":
-                continue
+            # if file_path.name != "axis_overlay_node_2d.gd":
+            #     continue
 
-            print(f"Reading: {file_path.name}")
+            print(f"Processing: {file_path.name}")
             content = file_path.read_text(encoding="utf-8")
 
             tree = parser.parse(content, gather_metadata=True)
-            debug = DebugVisitor()
-            debug.visit(tree)
+            # debug = DebugVisitor()
+            # debug.visit(tree)
 
-            dump(tree)
+            # dump(tree)
 
             collector = SymbolCollector()
             collector.visit(tree)
 
-            renamer = Renamer(collector.global_scope)
+            renamer = Renamer(collector.global_scope, content)
             renamer.visit(tree)
 
             new_source = apply_edits(content, renamer.edits)
 
-            print(new_source)
+            # print(new_source)
 
             file_path.write_text(new_source, encoding="utf-8")
             
