@@ -5,6 +5,7 @@ A Python script for obfuscating Godot gdscript code.
 ## Requirements
 
 * Python
+* uv
 
 ## Setup
 
@@ -17,8 +18,10 @@ uv sync
 Note that the sript overwrites existing files, be careful!
 
 ```shell
-uv run main.py
+uv run python -m godot_code_obfuscation /path/to/godot-game/
 ```
+
+This is meant to be run as part of an automated build pipeline.
 
 ## Developers
 

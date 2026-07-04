@@ -1,9 +1,44 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
 [project]
 name = "godot-code-obfuscation"
 version = "0.1.0"
-description = "Obfuscate Godot gdscript code."
+description = "Obfuscate Godot GDScript code."
 readme = "README.md"
 requires-python = ">=3.14"
+license = "MIT"
+
+authors = [
+    { name = "firefly2442" }
+]
+
+keywords = [
+    "godot",
+    "gdscript",
+    "obfuscation",
+    "programming",
+]
+
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.14",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+
 dependencies = [
     "gdtoolkit>=4.5.0",
 ]
+
+[project.urls]
+Homepage = "https://github.com/firefly2442/godot-code-obfuscation"
+Repository = "https://github.com/firefly2442/godot-code-obfuscation"
+Issues = "https://github.com/firefly2442/godot-code-obfuscation/issues"
+
+[project.scripts]
+gdobfuscate = "godot_code_obfuscation.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/godot_code_obfuscation"]
